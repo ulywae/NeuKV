@@ -181,6 +181,49 @@ namespace Neu
         }
 
         /**
+         * @brief Packs multiple booleans into a single numeric key to save NVS write cycles.
+         * @tparam T The storage type (uint8_t for 8 flags, uint16_t for 16, uint32_t for 32).
+         * @param key Storage key name.
+         * @param flags List of booleans in braces, e.g., {true, false, true}.
+         * @return true if the packed byte was successfully stored.
+         */
+        template <typename T = uint8_t>
+        bool putFlags(const char *key, std::initializer_list<bool> flags)
+        {
+            T packed = 0;
+            uint8_t i = 0;
+            for (bool f : flags)
+            {
+                if (f)
+                    packed |= ((T)1 << i);
+                if (++i >= (sizeof(T) * 8))
+                    break;
+            }
+            return put(key, packed);
+        }
+
+        /**
+         * @brief Unpacks a stored numeric key back into multiple boolean variables.
+         * @tparam T The storage type used during putFlags.
+         * @param key Storage key name.
+         * @param flagsArray Pointer to a boolean array to store the results.
+         * @param count Number of flags to extract.
+         */
+        template <typename T = uint8_t>
+        void getFlags(const char *key, bool *flagsArray, uint8_t count)
+        {
+            T packed;
+            if (get(key, packed))
+            {
+                for (uint8_t i = 0; i < count; i++)
+                {
+                    if (i < (sizeof(T) * 8))
+                        flagsArray[i] = (packed >> i) & 1;
+                }
+            }
+        }
+
+        /**
          * @brief Store raw binary data (arrays, buffers, etc).
          * @param key Storage key name.
          * @param data Pointer to the data buffer.
