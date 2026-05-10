@@ -3,18 +3,14 @@
 #######################################
 
 #######################################
-# Datatypes (Classes)
-#######################################
-KV	KEYWORD1
-Neu	KEYWORD1
-
-#######################################
-# Global Instances
+# Datatypes (KEYWORD1)
 #######################################
 NeuKV	KEYWORD1
+Storage	KEYWORD1
+KV	KEYWORD1
 
 #######################################
-# Methods and Functions
+# Methods and Functions (KEYWORD2)
 #######################################
 begin	KEYWORD2
 end	KEYWORD2
@@ -28,7 +24,13 @@ putBool	KEYWORD2
 getBool	KEYWORD2
 putRaw	KEYWORD2
 getRaw	KEYWORD2
+putFlags	KEYWORD2
+getFlags	KEYWORD2
 isExists	KEYWORD2
 remove	KEYWORD2
 clear	KEYWORD2
 format	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
