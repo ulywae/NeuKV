@@ -16,7 +16,7 @@
 - **Multi-Namespace Support**: Easily isolate different types of data (e.g., WiFi, Sensors, System) by creating multiple instances.
 - **Raw Data Support**: Save and load raw buffers, arrays, or binary data directly.
 - **Flash Saver (Flag Packing)**: Pack up to 32 booleans into a single numeric key to reduce NVS write cycles and extend Flash life.
-- **Powerfull Templates**: Save and load entire `structs` or arrays in a single line.
+- **Powerful Templates**: Save and load entire `structs` or arrays in a single line.
 - **Beginner Friendly**: Provides simple `putInt`, `putFloat`, and `putBool` shortcuts.
 - **Auto-Initialization**: Automatically handles NVS flash initialization and error recovery.
 
