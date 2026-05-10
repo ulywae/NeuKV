@@ -15,7 +15,7 @@
 - **Type Safety**: Includes `static_assert` to prevent saving incompatible data types (like pointers).
 - **Multi-Namespace Support**: Easily isolate different types of data (e.g., WiFi, Sensors, System) by creating multiple instances.
 - **Raw Data Support**: Save and load raw buffers, arrays, or binary data directly.
-- **Powerfull Templates**: Save and load entire `structs` or arrays in a single line.
+- **Powerful Templates**: Save and load entire `structs` or arrays in a single line.
 - **Beginner Friendly**: Provides simple `putInt`, `putFloat`, and `putBool` shortcuts.
 - **Auto-Initialization**: Automatically handles NVS flash initialization and error recovery.
 
@@ -83,7 +83,8 @@ NeuKV.getRaw("history", restoredHistory, sizeof(restoredHistory));
 
 ### Multi-Namespace
 
-UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
+UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). 
+This keeps your data organized and safe during `clear()` operations.
 
 ```cpp
 #include <NeuKV.h>
