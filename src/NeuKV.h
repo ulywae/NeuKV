@@ -113,10 +113,24 @@ namespace Neu
         }
 
         /** @name Basic Helpers
-         *  Simple shortcuts for beginners.
+         * Simple shortcuts for basic data types.
          */
         ///@{
+
+        /**
+         * @brief Store a 32-bit integer.
+         * @param key Storage key name.
+         * @param val The integer value to store.
+         * @return true if successful.
+         */
         bool putInt(const char *key, int32_t val) { return put(key, val); }
+
+        /**
+         * @brief Get a 32-bit integer.
+         * @param key Storage key name.
+         * @param def Default value if key is not found.
+         * @return The stored value or default.
+         */
         int32_t getInt(const char *key, int32_t def = 0)
         {
             int32_t v;
@@ -124,7 +138,20 @@ namespace Neu
             return v;
         }
 
+        /**
+         * @brief Store a float value.
+         * @param key Storage key name.
+         * @param val The float value to store.
+         * @return true if successful.
+         */
         bool putFloat(const char *key, float val) { return put(key, val); }
+
+        /**
+         * @brief Get a float value.
+         * @param key Storage key name.
+         * @param def Default value if key is not found.
+         * @return The stored value or default.
+         */
         float getFloat(const char *key, float def = 0.0f)
         {
             float v;
@@ -132,7 +159,20 @@ namespace Neu
             return v;
         }
 
+        /**
+         * @brief Store a boolean value.
+         * @param key Storage key name.
+         * @param val The boolean value to store.
+         * @return true if successful.
+         */
         bool putBool(const char *key, bool val) { return put(key, val); }
+
+        /**
+         * @brief Get a boolean value.
+         * @param key Storage key name.
+         * @param def Default value if key is not found.
+         * @return The stored value or default.
+         */
         bool getBool(const char *key, bool def = false)
         {
             bool v;
@@ -140,8 +180,24 @@ namespace Neu
             return v;
         }
 
+        /**
+         * @brief Store raw binary data (arrays, buffers, etc).
+         * @param key Storage key name.
+         * @param data Pointer to the data buffer.
+         * @param len Length of the data in bytes.
+         * @return true if successful.
+         */
         bool putRaw(const char *key, const void *data, size_t len);
+
+        /**
+         * @brief Retrieve raw binary data into a provided buffer.
+         * @param key Storage key name.
+         * @param data Pointer to the destination buffer.
+         * @param len Size of the destination buffer in bytes.
+         * @return true if successful.
+         */
         bool getRaw(const char *key, void *data, size_t len);
+
         ///@}
 
         /**
