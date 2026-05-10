@@ -16,7 +16,7 @@
 - **Multi-Namespace Support**: Easily isolate different types of data (e.g., WiFi, Sensors, System) by creating multiple instances.
 - **Raw Data Support**: Save and load raw buffers, arrays, or binary data directly.
 - **Flash Saver (Flag Packing)**: Pack up to 32 booleans into a single numeric key to reduce NVS write cycles and extend Flash life.
-- **Powerful Templates**: Save and load entire `structs` or arrays in a single line.
+- **Powerfull Templates**: Save and load entire `structs` or arrays in a single line.
 - **Beginner Friendly**: Provides simple `putInt`, `putFloat`, and `putBool` shortcuts.
 - **Auto-Initialization**: Automatically handles NVS flash initialization and error recovery.
 
@@ -91,16 +91,18 @@ NeuKV.getRaw("history", restoredHistory, sizeof(restoredHistory));
 Stop wasting Flash write cycles! Pack multiple booleans into a single 1-byte or 2-byte storage. Perfect for system states or user preferences.
 
 ```cpp
-// 1. Pack 4 booleans into 1 byte (uint8_t)
+// 1. [BULK] Pack 4 booleans into 1 byte (Saves Flash Life!)
 NeuKV.putFlags("settings", {true, false, true, true});
 
-// 2. Retrieve them back
+// 2. [SINGLE] Update just one specific bit (Read-Modify-Write)
+NeuKV.putFlag("settings", 1, true); // Changes bit at index 1 to true
+
+// 3. [SINGLE] Retrieve only one specific bit
+bool isMqttActive = NeuKV.getFlag("settings", 2);
+
+// 4. [BULK] Retrieve all back into an array
 bool myFlags[4];
 NeuKV.getFlags("settings", myFlags, 4);
-
-if (myFlags[0]) {
-    // Flag 0 is true!
-}
 ```
 
 > [!IMPORTANT]
@@ -110,9 +112,8 @@ if (myFlags[0]) {
 
 > [!TIP]
 >
-> **Flash Longevity Tip**: Use `putFlags()` whenever you need to store multiple status booleans.
-> Storing 8 booleans as 1 packed byte is **8x more efficient** for your ESP32 Flash memory
-> than storing them as 8 separate keys.
+> **Flash Longevity Tip**: Use `putFlags()` (Bulk) whenever you need to store multiple status booleans at once.
+> It performs only ONE write operation to the hardware.
 
 ---
 
@@ -186,8 +187,10 @@ void saveConfig() {
 | `getFloat(key, def)`       | Shortcut to get a float with a default value.                               |
 | `putBool(key, val)`        | Shortcut to store a boolean.                                                |
 | `getBool(key, def)`        | Shortcut to get a boolean with a default value.                             |
-| `putFlags<T>(key, {..})`   | Packs multiple bools into one numeric key (saves Flash life).               |
-| `getFlags<T>(key, arr, n)` | Unpacks a numeric key back into a boolean array.                            |
+| `putFlags<T>(key, {..})`   | [BULK] Packs multiple bools into one numeric key (saves Flash life).        |
+| `getFlags<T>(key, arr, n)` | [BULK] Unpacks a numeric key back into a boolean array.                     |
+| `putFlag<T>(key, idx, v)`  | [SINGLE] Updates one specific bit (Read-Modify-Write).                      |
+| `getFlag<T>(key, idx, d)`  | [SINGLE] Retrieves one specific bit from a packed key.                      |
 | `remove(key)`              | Deletes a specific key-value pair.                                          |
 | `clear()`                  | Erases all keys within the current namespace.                               |
 | `format()`                 | [DANGER] Wipes the entire NVS memory (all namespaces).                      |
