@@ -2,7 +2,6 @@
  * @file NeuKV.h
  * @author Ulywae (@neufa)
  * @brief Simple and powerful NVS wrapper for ESP32 without String overhead.
- * @version 1.0.0
  *
  * Features:
  * - Simple and easy to use.
