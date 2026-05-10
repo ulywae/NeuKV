@@ -181,11 +181,37 @@ namespace Neu
         }
 
         /**
-         * @brief Packs multiple booleans into a single numeric key to save NVS write cycles.
-         * @tparam T The storage type (uint8_t for 8 flags, uint16_t for 16, uint32_t for 32).
+         * @brief Store raw binary data (arrays, buffers, etc).
          * @param key Storage key name.
+         * @param data Pointer to the data buffer.
+         * @param len Length of the data in bytes.
+         * @return true if successful.
+         */
+        bool putRaw(const char *key, const void *data, size_t len);
+
+        /**
+         * @brief Retrieve raw binary data into a provided buffer.
+         * @param key Storage key name.
+         * @param data Pointer to the destination buffer.
+         * @param len Size of the destination buffer in bytes.
+         * @return true if successful.
+         */
+        bool getRaw(const char *key, void *data, size_t len);
+
+        ///@}
+
+        /** @name Flash Saver (Flag Packing)
+         * Methods to pack multiple booleans into a single numeric key to save NVS write cycles.
+         */
+        ///@{
+
+        /**
+         * @brief [BULK] Packs multiple booleans into a single key.
+         * @details This is the most efficient way to store states. It performs only ONE write operation.
+         * @tparam T Storage type: uint8_t (up to 8 flags), uint16_t (16), or uint32_t (32).
+         * @param key Storage key name (max 15 chars).
          * @param flags List of booleans in braces, e.g., {true, false, true}.
-         * @return true if the packed byte was successfully stored.
+         * @return true if successful.
          */
         template <typename T = uint8_t>
         bool putFlags(const char *key, std::initializer_list<bool> flags)
@@ -203,10 +229,10 @@ namespace Neu
         }
 
         /**
-         * @brief Unpacks a stored numeric key back into multiple boolean variables.
+         * @brief [BULK] Unpacks a stored key back into a boolean array.
          * @tparam T The storage type used during putFlags.
          * @param key Storage key name.
-         * @param flagsArray Pointer to a boolean array to store the results.
+         * @param flagsArray Pointer to a boolean array to store results.
          * @param count Number of flags to extract.
          */
         template <typename T = uint8_t>
@@ -218,28 +244,58 @@ namespace Neu
                 for (uint8_t i = 0; i < count; i++)
                 {
                     if (i < (sizeof(T) * 8))
+                    {
                         flagsArray[i] = (packed >> i) & 1;
+                    }
                 }
             }
         }
 
         /**
-         * @brief Store raw binary data (arrays, buffers, etc).
+         * @brief [SINGLE] Update only ONE specific bit within a packed key.
+         * @details Note: This performs a Read-Modify-Write operation.
+         *          It reads the existing data before updating the specific bit.
+         * @tparam T Storage type (default uint8_t).
          * @param key Storage key name.
-         * @param data Pointer to the data buffer.
-         * @param len Length of the data in bytes.
+         * @param index The bit index to modify (0 to 7/15/31).
+         * @param value The new boolean state for that bit.
          * @return true if successful.
          */
-        bool putRaw(const char *key, const void *data, size_t len);
+        template <typename T = uint8_t>
+        bool putFlag(const char *key, uint8_t index, bool value)
+        {
+            if (index >= (sizeof(T) * 8))
+                return false;
+            T packed = 0;
+            get(key, packed); // Read existing state
+            if (value)
+                packed |= ((T)1 << index);
+            else
+                packed &= ~((T)1 << index);
+            return put(key, packed);
+        }
 
         /**
-         * @brief Retrieve raw binary data into a provided buffer.
+         * @brief [SINGLE] Retrieve only ONE specific bit from a packed key.
+         * @tparam T Storage type (default uint8_t).
          * @param key Storage key name.
-         * @param data Pointer to the destination buffer.
-         * @param len Size of the destination buffer in bytes.
-         * @return true if successful.
+         * @param index The bit index to retrieve.
+         * @param def Default value if key is not found.
+         * @return Boolean state of the specific bit.
          */
-        bool getRaw(const char *key, void *data, size_t len);
+        template <typename T = uint8_t>
+        bool getFlag(const char *key, uint8_t index, bool def = false)
+        {
+            T packed;
+            if (get(key, packed))
+            {
+                if (index < (sizeof(T) * 8))
+                {
+                    return (packed >> index) & 1;
+                }
+            }
+            return def;
+        }
 
         ///@}
 
