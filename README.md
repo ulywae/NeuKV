@@ -15,7 +15,8 @@
 - **Type Safety**: Includes `static_assert` to prevent saving incompatible data types (like pointers).
 - **Multi-Namespace Support**: Easily isolate different types of data (e.g., WiFi, Sensors, System) by creating multiple instances.
 - **Raw Data Support**: Save and load raw buffers, arrays, or binary data directly.
-- **Powerful Templates**: Save and load entire `structs` or arrays in a single line.
+- **Flash Saver (Flag Packing)**: Pack up to 32 booleans into a single numeric key to reduce NVS write cycles and extend Flash life.
+- **Powerfull Templates**: Save and load entire `structs` or arrays in a single line.
 - **Beginner Friendly**: Provides simple `putInt`, `putFloat`, and `putBool` shortcuts.
 - **Auto-Initialization**: Automatically handles NVS flash initialization and error recovery.
 
@@ -66,6 +67,8 @@ void setup() {
 }
 ```
 
+---
+
 ### Storing Raw Arrays/Buffers
 
 Use `putRaw` and `getRaw` for arrays or raw binary buffers.
@@ -81,10 +84,41 @@ int restoredHistory[5];
 NeuKV.getRaw("history", restoredHistory, sizeof(restoredHistory));
 ```
 
+---
+
+### Flash Saver (Storing Multiple Booleans)
+
+Stop wasting Flash write cycles! Pack multiple booleans into a single 1-byte or 2-byte storage. Perfect for system states or user preferences.
+
+```cpp
+// 1. Pack 4 booleans into 1 byte (uint8_t)
+NeuKV.putFlags("settings", {true, false, true, true});
+
+// 2. Retrieve them back
+bool myFlags[4];
+NeuKV.getFlags("settings", myFlags, 4);
+
+if (myFlags[0]) {
+    // Flag 0 is true!
+}
+```
+
+> [!IMPORTANT]
+>
+> **Why use Flag Packing?**
+> Every write to Flash memory has a cost. Storing 8 booleans as 1 packed byte is **8x more efficient** than storing them separately. **NeuKV** helps you extend your ESP32's life by reducing unnecessary write cycles.
+
+> [!TIP]
+>
+> **Flash Longevity Tip**: Use `putFlags()` whenever you need to store multiple status booleans.
+> Storing 8 booleans as 1 packed byte is **8x more efficient** for your ESP32 Flash memory
+> than storing them as 8 separate keys.
+
+---
+
 ### Multi-Namespace
 
-UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). 
-This keeps your data organized and safe during `clear()` operations.
+UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
 
 ```cpp
 #include <NeuKV.h>
@@ -113,6 +147,8 @@ void setup() {
 }
 ```
 
+---
+
 ### Advanced Usage (Storing Structs)
 
 ```cpp
@@ -135,25 +171,27 @@ void saveConfig() {
 
 ## API Reference
 
-| Method                  | Description                                                                 |
-| :---------------------- | :-------------------------------------------------------------------------- |
-| `begin()`               | Opens the default namespace and initializes flash hardware.                 |
-| `isExists(key)`         | Checks if a specific key exists in the current namespace.                   |
-| `put<T>(key, val)`      | Stores any trivially copyable data (struct, int, float, etc).               |
-| `get<T>(key, var)`      | Retrieves data. Returns `true` if found, variable remains unchanged if not. |
-| `get<T>(key, var, def)` | Retrieves data with an automatic default value fallback.                    |
-| `putInt(key, val)`      | Shortcut to store a 32-bit integer.                                         |
-| `putRaw(key, ptr, len)` | Stores raw binary data/arrays.                                              |
-| `getRaw(key, ptr, len)` | Retrieves raw binary data into a buffer.                                    |
-| `getInt(key, def)`      | Shortcut to get an integer with a default value.                            |
-| `putFloat(key, val)`    | Shortcut to store a float.                                                  |
-| `getFloat(key, def)`    | Shortcut to get a float with a default value.                               |
-| `putBool(key, val)`     | Shortcut to store a boolean.                                                |
-| `getBool(key, def)`     | Shortcut to get a boolean with a default value.                             |
-| `remove(key)`           | Deletes a specific key-value pair.                                          |
-| `clear()`               | Erases all keys within the current namespace.                               |
-| `format()`              | [DANGER] Wipes the entire NVS memory (all namespaces).                      |
-| `end()`                 | Commits pending changes and closes the NVS handle.                          |
+| Method                     | Description                                                                 |
+| :------------------------- | :-------------------------------------------------------------------------- |
+| `begin()`                  | Opens the default namespace and initializes flash hardware.                 |
+| `isExists(key)`            | Checks if a specific key exists in the current namespace.                   |
+| `put<T>(key, val)`         | Stores any trivially copyable data (struct, int, float, etc).               |
+| `get<T>(key, var)`         | Retrieves data. Returns `true` if found, variable remains unchanged if not. |
+| `get<T>(key, var, def)`    | Retrieves data with an automatic default value fallback.                    |
+| `putInt(key, val)`         | Shortcut to store a 32-bit integer.                                         |
+| `putRaw(key, ptr, len)`    | Stores raw binary data/arrays.                                              |
+| `getRaw(key, ptr, len)`    | Retrieves raw binary data into a buffer.                                    |
+| `getInt(key, def)`         | Shortcut to get an integer with a default value.                            |
+| `putFloat(key, val)`       | Shortcut to store a float.                                                  |
+| `getFloat(key, def)`       | Shortcut to get a float with a default value.                               |
+| `putBool(key, val)`        | Shortcut to store a boolean.                                                |
+| `getBool(key, def)`        | Shortcut to get a boolean with a default value.                             |
+| `putFlags<T>(key, {..})`   | Packs multiple bools into one numeric key (saves Flash life).               |
+| `getFlags<T>(key, arr, n)` | Unpacks a numeric key back into a boolean array.                            |
+| `remove(key)`              | Deletes a specific key-value pair.                                          |
+| `clear()`                  | Erases all keys within the current namespace.                               |
+| `format()`                 | [DANGER] Wipes the entire NVS memory (all namespaces).                      |
+| `end()`                    | Commits pending changes and closes the NVS handle.                          |
 
 ---
 
