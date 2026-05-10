@@ -119,7 +119,7 @@ NeuKV.getFlags("settings", myFlags, 4);
 
 ### Multi-Namespace
 
-UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
+You can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
 
 ```cpp
 #include <NeuKV.h>
