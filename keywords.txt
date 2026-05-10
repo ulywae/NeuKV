@@ -3,13 +3,13 @@
 #######################################
 
 #######################################
-# Datatypes (KEYWORD1 - Warna Oranye)
+# Datatypes
 #######################################
 NeuKV	KEYWORD1
 Storage	KEYWORD1
 
 #######################################
-# Methods and Functions (KEYWORD2 - Warna Biru)
+# Methods and Functions
 #######################################
 begin	KEYWORD2
 end	KEYWORD2
