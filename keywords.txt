@@ -26,6 +26,8 @@ putRaw	KEYWORD2
 getRaw	KEYWORD2
 putFlags	KEYWORD2
 getFlags	KEYWORD2
+putFlag	KEYWORD2
+getFlag	KEYWORD2
 isExists	KEYWORD2
 remove	KEYWORD2
 clear	KEYWORD2
