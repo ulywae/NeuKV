@@ -14,9 +14,10 @@
 #ifndef NEU_KEY_VALUE_H
 #define NEU_KEY_VALUE_H
 
-#include <type_traits>
-#include "nvs_flash.h"
-#include "nvs.h"
+#include <type_traits> // For static_assert and is_trivially_copyable
+#include "esp_err.h"   // CRITICAL: For esp_err_t and ESP_OK definitions
+#include "nvs_flash.h" // For nvs_flash_init, deinit, and erase
+#include "nvs.h"       // For nvs_open, nvs_get_stats, and handle
 
 namespace Neu
 {
@@ -115,6 +116,30 @@ namespace Neu
          * Simple shortcuts for basic data types.
          */
         ///@{
+
+        /**
+         * @brief Stores a single byte (uint8_t) into NVS.
+         * @param key Storage key name.
+         * @param val The 8-bit value to store.
+         * @return true if successful.
+         */
+        bool putByte(const char *key, uint8_t val)
+        {
+            return put(key, val);
+        }
+
+        /**
+         * @brief Retrieves a single byte (uint8_t) from NVS.
+         * @param key Storage key name.
+         * @param def Default value if key is not found.
+         * @return The stored 8-bit value or default.
+         */
+        uint8_t getByte(const char *key, uint8_t def = 0)
+        {
+            uint8_t v;
+            get(key, v, def);
+            return v;
+        }
 
         /**
          * @brief Store a 32-bit integer.
@@ -228,14 +253,42 @@ namespace Neu
         }
 
         /**
-         * @brief [BULK] Unpacks a stored key back into a boolean array.
-         * @tparam T The storage type used during putFlags.
+         * @brief [BULK] Packs a boolean array directly into a single storage key.
+         * @details Detects array size at compile time (zero-cost abstraction). No heap allocation.
+         * @tparam T Integer container (uint8_t, uint16_t, uint32_t, uint64_t).
+         * @tparam N (Auto) Number of elements in the boolean array.
+         * @param key Unique key name.
+         * @param flagsArray Reference to the boolean array.
+         * @return true if successful.
+         *
+         * @note If the number of array elements (N) exceeds the bit capacity of type T,
+         *       the remaining array elements are safely ignored.
+         */
+        template <typename T = uint8_t, size_t N>
+        bool putFlags(const char *key, const bool (&flagsArray)[N])
+        {
+            T packed = 0;
+            const uint8_t maxBits = sizeof(T) * 8;
+            for (size_t i = 0; i < N; i++)
+            {
+                if (i >= maxBits)
+                    break;
+                if (flagsArray[i])
+                    packed |= ((T)1 << i);
+            }
+            return put(key, packed);
+        }
+
+        /**
+         * @brief [BULK] Unpacks a stored key into a boolean array using a pointer.
+         * @tparam T Storage type used during putFlags.
          * @param key Storage key name.
          * @param flagsArray Pointer to a boolean array to store results.
          * @param count Number of flags to extract.
+         * @return true if key exists and was read.
          */
         template <typename T = uint8_t>
-        void getFlags(const char *key, bool *flagsArray, uint8_t count)
+        bool getFlags(const char *key, bool *flagsArray, uint8_t count)
         {
             T packed;
             if (get(key, packed))
@@ -247,7 +300,26 @@ namespace Neu
                         flagsArray[i] = (packed >> i) & 1;
                     }
                 }
+                return true;
             }
+            return false;
+        }
+
+        /**
+         * @brief [BULK] Gets data from NVS and parses it into a boolean array (Auto-size).
+         * @details Maps each bit to an element of the given boolean array.
+         * @tparam T Integer container used for storing.
+         * @tparam N (Auto) Number of elements in the destination array.
+         * @param key Unique key name.
+         * @param flagsArray Reference to the boolean array for results.
+         * @return true if found and parsed.
+         *
+         * @note If the bit capacity of type T is smaller than the array size N, the remaining elements of the array will be filled with 'false'.
+         */
+        template <typename T = uint8_t, size_t N>
+        bool getFlags(const char *key, bool (&flagsArray)[N])
+        {
+            return getFlags<T>(key, flagsArray, (uint8_t)N);
         }
 
         /**
@@ -256,8 +328,8 @@ namespace Neu
          *          It reads the existing data before updating the specific bit.
          * @tparam T Storage type (default uint8_t).
          * @param key Storage key name.
-         * @param index The bit index to modify (0 to 7/15/31).
-         * @param value The new boolean state for that bit.
+         * @param index Bit index to modify (0 to 7/15/31).
+         * @param value New boolean state for that bit.
          * @return true if successful.
          */
         template <typename T = uint8_t>
@@ -278,7 +350,7 @@ namespace Neu
          * @brief [SINGLE] Retrieve only ONE specific bit from a packed key.
          * @tparam T Storage type (default uint8_t).
          * @param key Storage key name.
-         * @param index The bit index to retrieve.
+         * @param index Bit index to retrieve.
          * @param def Default value if key is not found.
          * @return Boolean state of the specific bit.
          */
@@ -296,7 +368,40 @@ namespace Neu
             return def;
         }
 
+        /**
+         * @brief [SINGLE] Inverts (toggles) a specific bit status within a packed key.
+         *
+         * @details This performs a Read-Modify-Write operation. It retrieves the existing
+         * packed value, flips the bit at the specified index using XOR, and saves it back.
+         *
+         * @tparam T Storage type (uint8_t, uint16_t, or uint32_t).
+         *           Default is uint8_t (index 0-7).
+         * @param key Storage key name.
+         * @param index The bit index to toggle.
+         * @return true if the read-modify-write process succeeded.
+         * @return false if the index is out of bounds for type T or NVS access failed.
+         */
+        template <typename T = uint8_t>
+        bool toggleFlag(const char *key, uint8_t index)
+        {
+            if (index >= (sizeof(T) * 8))
+                return false;
+
+            T packed = 0;
+            get(key, packed); // Retrieve current state
+
+            packed ^= ((T)1 << index); // Flip bit using XOR operator
+
+            return put(key, packed);
+        }
+
         ///@}
+
+        /**
+         * @brief Gets the number of free entries available in the NVS partition.
+         * @return Number of free entries or 0 if check fails.
+         */
+        size_t getFreeEntries();
 
         /**
          * @brief Remove a specific key from the current namespace.
