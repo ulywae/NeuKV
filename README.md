@@ -100,9 +100,12 @@ NeuKV.putFlag("settings", 1, true); // Changes bit at index 1 to true
 // 3. [SINGLE] Retrieve only one specific bit
 bool isMqttActive = NeuKV.getFlag("settings", 2);
 
-// 4. [BULK] Retrieve all back into an array
+// 4. [BULK] Retrieve all back into an array (Auto-detects size!)
 bool myFlags[4];
-NeuKV.getFlags("settings", myFlags, 4);
+NeuKV.getFlags("settings", myFlags); // No need to pass '4'
+
+// 5. [SINGLE] Flip a state (Perfect for buttons)
+NeuKV.toggleFlag("settings", 0);
 ```
 
 > [!IMPORTANT]
@@ -119,7 +122,7 @@ NeuKV.getFlags("settings", myFlags, 4);
 
 ### Multi-Namespace
 
-You can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
+UsageYou can create multiple instances to separate your data into different namespaces (e.g., one for system settings and one for user profiles). This keeps your data organized and safe during `clear()` operations.
 
 ```cpp
 #include <NeuKV.h>
@@ -179,9 +182,11 @@ void saveConfig() {
 | `put<T>(key, val)`         | Stores any trivially copyable data (struct, int, float, etc).               |
 | `get<T>(key, var)`         | Retrieves data. Returns `true` if found, variable remains unchanged if not. |
 | `get<T>(key, var, def)`    | Retrieves data with an automatic default value fallback.                    |
-| `putInt(key, val)`         | Shortcut to store a 32-bit integer.                                         |
 | `putRaw(key, ptr, len)`    | Stores raw binary data/arrays.                                              |
 | `getRaw(key, ptr, len)`    | Retrieves raw binary data into a buffer.                                    |
+| `putByte(key, val)`        | Shortcut to store an 8-bit unsigned integer (uint8_t).                      |
+| `getByte(key, def)`        | Shortcut to get a byte with a default value.                                |
+| `putInt(key, val)`         | Shortcut to store a 32-bit integer.                                         |
 | `getInt(key, def)`         | Shortcut to get an integer with a default value.                            |
 | `putFloat(key, val)`       | Shortcut to store a float.                                                  |
 | `getFloat(key, def)`       | Shortcut to get a float with a default value.                               |
@@ -189,8 +194,12 @@ void saveConfig() {
 | `getBool(key, def)`        | Shortcut to get a boolean with a default value.                             |
 | `putFlags<T>(key, {..})`   | [BULK] Packs multiple bools into one numeric key (saves Flash life).        |
 | `getFlags<T>(key, arr, n)` | [BULK] Unpacks a numeric key back into a boolean array.                     |
+| `putFlags<T>(key, arr)`    | [BULK] Packs a boolean array (auto-detects size) into one key.              |
+| `getFlags<T>(key, arr)`    | [BULK] Unpacks a numeric key into a boolean array (auto-size).              |
 | `putFlag<T>(key, idx, v)`  | [SINGLE] Updates one specific bit (Read-Modify-Write).                      |
 | `getFlag<T>(key, idx, d)`  | [SINGLE] Retrieves one specific bit from a packed key.                      |
+| `toggleFlag<T>(key, idx)`  | [SINGLE] Inverts (flips) a specific bit status using XOR.                   |
+| `getFreeEntries()`         | [MONITOR] Returns the number of free slots available in the NVS partition.  |
 | `remove(key)`              | Deletes a specific key-value pair.                                          |
 | `clear()`                  | Erases all keys within the current namespace.                               |
 | `format()`                 | [DANGER] Wipes the entire NVS memory (all namespaces).                      |
