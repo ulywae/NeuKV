@@ -5,9 +5,9 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-NeuKV	KEYWORD1
-Storage	KEYWORD1
+Neu	KEYWORD1
 KV	KEYWORD1
+NeuKV	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -22,13 +22,17 @@ putFloat	KEYWORD2
 getFloat	KEYWORD2
 putBool	KEYWORD2
 getBool	KEYWORD2
+putByte	KEYWORD2
+getByte	KEYWORD2
 putRaw	KEYWORD2
 getRaw	KEYWORD2
 putFlags	KEYWORD2
 getFlags	KEYWORD2
 putFlag	KEYWORD2
 getFlag	KEYWORD2
+toggleFlag	KEYWORD2
 isExists	KEYWORD2
+getFreeEntries	KEYWORD2
 remove	KEYWORD2
 clear	KEYWORD2
 format	KEYWORD2
