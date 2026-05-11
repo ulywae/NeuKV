@@ -55,7 +55,9 @@ namespace Neu
         if (!_is_open)
             return false;
         size_t s;
-        return (nvs_get_blob(_handle, key, NULL, &s) != ESP_ERR_NVS_NOT_FOUND);
+        esp_err_t err = nvs_get_blob(_handle, key, NULL, &s);
+        // Key is considered to exist if successful OR if the type does not match (but the key is found)
+        return (err == ESP_OK || err == ESP_ERR_NVS_TYPE_MISMATCH);
     }
 
     /**
@@ -80,6 +82,19 @@ namespace Neu
     }
 
     /**
+     * @brief Gets the number of free entries available in NVS partition.
+     */
+    size_t KV::getFreeEntries()
+    {
+        nvs_stats_t nvs_stats;
+        // Retrieving statistics from default partition "nvs"
+        esp_err_t err = nvs_get_stats(NULL, &nvs_stats);
+        if (err != ESP_OK)
+            return 0;
+        return nvs_stats.free_entries;
+    }
+
+    /**
      * @brief Removes a single key-value pair.
      */
     bool KV::remove(const char *key)
@@ -97,6 +112,10 @@ namespace Neu
     {
         if (init() != ESP_OK)
             return false;
+
+        _is_open = false;   // Reset state
+        nvs_flash_deinit(); // Ensures the hardware is stopped before wiping
+
         // Erase the default NVS partition
         esp_err_t ret = nvs_flash_erase();
         if (ret != ESP_OK)
@@ -113,7 +132,11 @@ namespace Neu
     {
         if (!_is_open)
             return false;
-        return (nvs_erase_all(_handle) == ESP_OK);
+        if (nvs_erase_all(_handle) == ESP_OK)
+        {
+            return (nvs_commit(_handle) == ESP_OK); // Commit changes
+        }
+        return false;
     }
 
     /**
